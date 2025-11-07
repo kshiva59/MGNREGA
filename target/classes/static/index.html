@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MGNREGA District Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f6fa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      color: #2f3640;
+      margin-bottom: 30px;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    input {
+      padding: 10px 15px;
+      font-size: 16px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      width: 250px;
+      outline: none;
+      transition: border 0.3s;
+    }
+
+    input:focus {
+      border-color: #0984e3;
+    }
+
+    button {
+      background: #0984e3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #74b9ff;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 450px;
+      text-align: left;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .data-row {
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #636e72;
+    }
+
+    .value {
+      color: #2d3436;
+      margin-left: 5px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #loader {
+      display: none;
+      color: #0984e3;
+      font-size: 18px;
+    }
+
+    .error {
+      color: red;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    .no-data {
+      font-size: 18px;
+      color: #e74c3c;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>MGNREGA District Data</h1>
+
+  <div class="search-box">
+    <input type="text" id="districtInput" placeholder="Enter District Name (e.g., RAIGAD)">
+    <button onclick="fetchDistrictData()">Search</button>
+  </div>
+
+  <div id="loader">Fetching data...</div>
+  <div id="result"></div>
+
+  <script>
+    async function fetchDistrictData() {
+      const district = document.getElementById("districtInput").value.trim().toUpperCase();
+      const resultDiv = document.getElementById("result");
+      const loader = document.getElementById("loader");
+      resultDiv.innerHTML = "";
+      loader.style.display = "block";
+
+      if (!district) {
+        loader.style.display = "none";
+        alert("Please enter a district name!");
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/district?name=${district}`);
+        if (!response.ok) throw new Error("Failed to fetch data");
+
+        const data = await response.json();
+        loader.style.display = "none";
+
+        // ✅ Check if data exists and not empty
+        if (!data || Object.keys(data).length === 0) {
+          resultDiv.innerHTML = `<p class="no-data">No data found for "${district}".</p>`;
+          return;
+        }
+
+        // ✅ Create a clean data card dynamically
+        let html = `<div class="card">`;
+        html += `<h3 style="text-align:center;color:#0984e3;margin-bottom:15px;">${district} District Report</h3>`;
+        for (const [key, value] of Object.entries(data)) {
+          html += `
+            <div class="data-row">
+              <span class="label">${key}:</span>
+              <span class="value">${value}</span>
+            </div>
+          `;
+        }
+        html += `</div>`;
+
+        resultDiv.innerHTML = html;
+
+      } catch (error) {
+        loader.style.display = "none";
+        resultDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
